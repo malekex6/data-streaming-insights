@@ -1,8 +1,6 @@
 # InsightStream
-InsightStream Sales Analytics: Real-Time GCP Data Pipeline
-# InsightStream
 
-real-time streaming analytics platform on Google Cloud Platform.
+Real-time streaming analytics platform on Google Cloud Platform.
 
 
 ## Project Overview
