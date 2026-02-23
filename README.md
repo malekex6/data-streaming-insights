@@ -24,12 +24,13 @@ This project is a real-time streaming analytics platform focused on **sales data
 
 ```
 FastAPI → Pub/Sub → Dataflow (Beam) → BigQuery (Bronze → Silver → Gold) → Looker Studio
-  |         |            |                |         |         |
-  |         |            |                |         |         +-- Dashboards & Analytics
-  |         |            |                |         +------------ Gold: Aggregated business metrics
-  |         |            |                +--------------------- Silver: Clean, deduplicated
-  |         |            +-------------------------------------- Bronze: Raw ingestion
-  |         +----------------------------------------------- Streaming pipeline
+  |         |                                   |        |        |         |
+  |         |            |                      |        |        |         +-- Dashboards & Analytics
+  |         |            |                      |        |        +------------ Gold: Aggregated business metrics
+  |         |            |                      |        +------------------- Silver: Clean, deduplicated
+  |         |            |                      +-------------------------------------- Bronze: Raw ingestion
+  |         |            +-------------------------------------- Real-time data transformation
+  |         +----------------------------------------------- Streaming event distribution
   +------------------------------------------------------ Mock data/API ingestion
 ```
 
