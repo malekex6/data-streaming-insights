@@ -1,18 +1,20 @@
-# InsightStream
-InsightStream Sales Analytics: Real-Time GCP Data Pipeline
-# InsightStream
 
-real-time streaming analytics platform on Google Cloud Platform.
+# Data Streaming Insights: Real-Time Sales & Transactions Analytics
+
+This project is a real-time streaming analytics platform focused on **sales data** and **transaction events**. It ingests, processes, and analyzes sales transactions as they happen, providing instant business insights and dashboards. Built on Google Cloud Platform, it shows modern data engineering for retail, e-commerce, or any domain with high-velocity sales data.
+
+
 
 
 ## Project Overview
 
-- **FastAPI**: REST API for generating and ingesting mock transaction events
-- **Google Pub/Sub**: Event distribution and decoupling
+- **Sales & Transaction Focus**: Simulates and analyzes real-world sales transactions (e.g., purchases, revenue, product sales, regions)
+- **FastAPI**: REST API for generating and ingesting mock sales transaction events
+- **Google Pub/Sub**: Real-time event distribution and decoupling
 - **Apache Beam (Dataflow)**: Streaming ETL pipeline (parse → validate → deduplicate → enrich → aggregate)
 - **Medallion Architecture**: Bronze (raw), Silver (clean), and Gold (aggregated) BigQuery tables
 - **BigQuery**: Scalable storage for all layers
-- **Looker Studio**: Real-time business dashboards from Gold layer
+- **Looker Studio**: Real-time business dashboards (sales trends, top products, revenue by region, etc.)
 - **Pydantic**: Schema validation and error handling
 - **Dead letter handling**: For malformed records
 - **Auto-scaling**: 1-5 workers (DirectRunner for local, DataflowRunner for cloud)
