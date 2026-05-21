@@ -1,5 +1,5 @@
 
-# Data Streaming Insights: Real-Time Sales & Transactions Analytics
+# Data Streaming Insights: real-time sales & transactions analytics
 
 This project is a real-time streaming analytics platform focused on **sales data** and **transaction events**. It ingests, processes, and analyzes sales transactions as they happen, providing instant business insights and dashboards. Built on Google Cloud Platform, it shows modern data engineering for retail, e-commerce, or any domain with high-velocity sales data.
 
