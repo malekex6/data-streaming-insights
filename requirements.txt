@@ -1,22 +1,19 @@
-# Mock Producer (FastAPI)
-fastapi==0.100.0
-uvicorn[standard]==0.23.1
-google-cloud-pubsub==2.35.0
-faker==18.5.0
-pydantic>=2.7,<3.0
-python-dotenv==1.0.0
-pydantic-settings>=2.7,<3.0
+# Versions below are the ones the test suite was run with (Python 3.13).
 
-# Dataflow (Apache Beam)
-apache-beam[gcp]==2.51.0
-google-cloud-bigquery==3.13.0
+# Producer (FastAPI + simulator)
+fastapi==0.162.5
+uvicorn[standard]==0.54.0
+google-cloud-pubsub==2.44.0
+faker==40.54.0
+pydantic==2.14.3
+pydantic-settings==2.16.2
+python-dotenv==1.2.4
+python-json-logger==4.2.0
 
-# Logging & Utilities
-python-json-logger==2.0.7
-python-dateutil==2.8.2
-pytz==2023.3
+# Pipeline (Apache Beam) + MERGE job
+apache-beam[gcp]==2.77.0
+google-cloud-bigquery==3.47.0
 
-# Testing
-pytest==7.3.1
-pytest-asyncio==0.20.3
-pytest-cov==4.0.0
+# Tests
+pytest==9.2.0
+httpx==0.28.1

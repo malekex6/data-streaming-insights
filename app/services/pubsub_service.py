@@ -1,23 +1,29 @@
 import json
 import logging
-from typing import List
+from typing import List, Optional
 
-from google.cloud import pubsub_v1
 from google.api_core.exceptions import GoogleAPIError
+from google.cloud import pubsub_v1
 
-from app.core.config import get_settings
 from app.models.event_model import TransactionEvent
 
-
 logger = logging.getLogger(__name__)
-settings = get_settings()
 
 
 class PubSubService:
-    def __init__(self, topic: str = settings.pubsub_topic) -> None:
-        # delay client creation so importing the module doesn't require
-        # valid ADC (useful for unit tests and local startup without creds)
-        self._publisher: pubsub_v1.PublisherClient | None = None
+    """Publishes sales to Pub/Sub.
+
+    Two attributes ride on every message, outside the JSON body:
+    - event_time: read by Beam with timestamp_attribute="event_time", so every
+      element is stamped with WHEN THE SALE HAPPENED, not when it arrived.
+    - transaction_id: read by Dataflow with id_label="transaction_id", so
+      Dataflow drops re-sent copies of the same sale at the source.
+    """
+
+    def __init__(self, topic: Optional[str] = None) -> None:
+        # Client and settings are created lazily so importing this module needs
+        # no credentials (unit tests, local start without a .env).
+        self._publisher: Optional[pubsub_v1.PublisherClient] = None
         self._topic = topic
 
     def _get_publisher(self) -> pubsub_v1.PublisherClient:
@@ -25,30 +31,36 @@ class PubSubService:
             self._publisher = pubsub_v1.PublisherClient()
         return self._publisher
 
+    def _get_topic(self) -> str:
+        if self._topic is None:
+            from app.core.config import get_settings
+            self._topic = get_settings().pubsub_topic
+        return self._topic
+
     def publish_events(self, events: List[TransactionEvent]) -> int:
-        """Publish a list of transaction events to Pub/Sub.
-
-        Args:
-            events: list of validated TransactionEvent objects
-
-        Returns:
-            int: number of messages successfully published
-        """
-        published_count = 0
+        """Publish events and return how many Pub/Sub acknowledged."""
+        if not events:
+            return 0
+        publisher, topic = self._get_publisher(), self._get_topic()
+        futures = []
         for event in events:
-            data = json.dumps(event.model_dump(), default=str).encode("utf-8")
+            data = json.dumps(event.to_payload()).encode("utf-8")
+            futures.append((event, publisher.publish(
+                topic,
+                data,
+                event_time=event.event_time_rfc3339(),
+                transaction_id=event.transaction_id,
+            )))
+        published = 0
+        for event, future in futures:
             try:
-                publisher = self._get_publisher()
-                future = publisher.publish(self._topic, data)
-                # we could add callbacks or result() to ensure delivery
-                future.result(timeout=10)
-                published_count += 1
+                future.result(timeout=30)
+                published += 1
             except GoogleAPIError as exc:
                 logger.error("Failed to publish event %s: %s", event.transaction_id, exc)
-            except Exception as exc:  # pragma: no cover - broad catch
+            except Exception:  # pragma: no cover - broad catch
                 logger.exception("Unexpected error publishing event %s", event.transaction_id)
-        return published_count
+        return published
 
 
-# provide a singleton for convenience
 pubsub_service = PubSubService()

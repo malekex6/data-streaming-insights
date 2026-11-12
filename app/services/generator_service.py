@@ -1,53 +1,53 @@
-from datetime import datetime, timezone
-from typing import List, Optional
+"""One-shot batch of fake sales, used by POST /generate.
+
+For a realistic stream (customer visits, offline phones, retries) use the
+simulator instead: `python -m app.simulate`.
+"""
+
+import random
 import uuid
+from datetime import datetime, timedelta, timezone
+from typing import List, Optional
 
-from faker import Faker
-
-from app.models.event_model import TransactionEvent, Region
-
-
-fake = Faker()
-
+from app.models.event_model import Region, TransactionEvent
 
 PRODUCT_IDS = [f"prod-{i:03d}" for i in range(1, 11)]
-USER_IDS = [f"user-{i:03d}" for i in range(1, 21)]
-CURRENCIES = ["USD", "EUR", "GBP", "JPY"]
+USER_IDS = [f"user-{i:03d}" for i in range(1, 51)]
+CURRENCY_BY_REGION = {"EU": "EUR", "US": "USD", "APAC": "JPY"}
+
+
+def make_event(
+    user_id: str,
+    region: str,
+    event_time: datetime,
+    rng: random.Random,
+    schema_version: int = 1,
+) -> TransactionEvent:
+    return TransactionEvent(
+        transaction_id=str(uuid.UUID(int=rng.getrandbits(128), version=4)),
+        user_id=user_id,
+        region=region,
+        product_id=rng.choice(PRODUCT_IDS),
+        amount=round(rng.uniform(3, 250), 2),
+        currency=CURRENCY_BY_REGION[region],
+        event_time=event_time,
+        schema_version=schema_version,
+    )
+
 
 def generate_transactions(
-    num_events: int, region: Optional[str] = None, schema_version: int = 1
+    num_events: int,
+    region: Optional[str] = None,
+    schema_version: int = 1,
+    now: Optional[datetime] = None,
+    rng: Optional[random.Random] = None,
 ) -> List[TransactionEvent]:
-    """Generate a list of transaction events.
-
-    Args:
-        num_events: number of events to create
-        region: optional region to override random choice
-        schema_version: version to assign to each event
-
-    Returns:
-        List[TransactionEvent]: generated event objects
-    """
-    events: List[TransactionEvent] = []
-
-    DATES = [fake.date_this_year() for _ in range(5)]
+    """Sales that happened in the last few seconds (small network delay only)."""
+    rng = rng or random.Random()
+    now = now or datetime.now(timezone.utc)
+    events = []
     for _ in range(num_events):
-        chosen_region = region if region else fake.random_element(elements=[r.value for r in Region])
-        chosen_date = fake.random_element(elements=DATES)
-        event_time = datetime.combine(chosen_date, fake.time_object())
-        ingestion_time = datetime.now(timezone.utc)
-        chosen_product = fake.random_element(elements=PRODUCT_IDS)
-        chosen_user = fake.random_element(elements=USER_IDS)
-        chosen_currency = fake.random_element(elements=CURRENCIES)
-        event = TransactionEvent(
-            transaction_id=str(uuid.uuid4()),
-            user_id=chosen_user,
-            region=chosen_region,
-            product_id=chosen_product,
-            amount=round(fake.pyfloat(left_digits=3, right_digits=2, positive=True), 2),
-            currency=chosen_currency,
-            event_time=event_time,
-            ingestion_time=ingestion_time,
-            schema_version=schema_version,
-        )
-        events.append(event)
+        chosen_region = region or rng.choice([r.value for r in Region])
+        event_time = now - timedelta(seconds=rng.uniform(0, 5))
+        events.append(make_event(rng.choice(USER_IDS), chosen_region, event_time, rng, schema_version))
     return events
