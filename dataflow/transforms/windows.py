@@ -168,9 +168,11 @@ class RegionSalesRolling10m(beam.PTransform):
 
     Real-life use: "is a region's checkout broken right now?". One minute
     alone is noisy (2 sales vs 5 sales means nothing); 10 minutes is stable,
-    and sliding every minute means a drop is seen within ~1 min, not at the
-    end of the next 10 min block. Each sale is counted in 10 windows, so NEVER
-    sum these rows: compare them (see the alert view in sql/views.sql).
+    and sliding every minute means the check runs every minute, not only when
+    a 10 min block ends. On a full stop the rolling total loses ~1/10 per
+    minute, so the "below half" alert fires ~5-6 min into the outage.
+    Each sale is counted in 10 windows, so NEVER sum these rows: compare them
+    (see the alert view in sql/50_views.sql).
     """
 
     def __init__(self, allowed_lateness_s=ALLOWED_LATENESS_SECONDS):

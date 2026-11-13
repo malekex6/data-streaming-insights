@@ -1,15 +1,16 @@
-import os
 from functools import lru_cache
+from typing import Optional
 
 # BaseSettings was moved to pydantic-settings in v2
 from pydantic_settings import BaseSettings
-from pydantic import Field
 
 
 class Settings(BaseSettings):
     gcp_project_id: str
     pubsub_topic: str
-    google_application_credentials: str
+    # Path to a key file. Leave it out when gcloud already gives credentials
+    # (Cloud Shell, or `gcloud auth application-default login`).
+    google_application_credentials: Optional[str] = None
     default_region: str = "US"
 
     model_config = {

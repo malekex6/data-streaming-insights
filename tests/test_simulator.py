@@ -42,3 +42,21 @@ def test_purchases_of_a_visit_are_closer_than_the_session_gap():
         times = sorted(set(times))
         gaps += [(b - a).total_seconds() for a, b in zip(times, times[1:])]
     assert any(g < 300 for g in gaps)
+
+
+def test_one_visit_is_one_session_window():
+    """Count 5 min gap sessions in what was sent: it must match the visits.
+
+    Guards against visits of the same customer gluing into one long session.
+    A few visits may still sit in an offline queue at the end, so allow 10 %.
+    """
+    sim, sent = run(minutes=30)
+    by_user = defaultdict(set)
+    for _, e in sent:
+        by_user[e.user_id].add(e.event_time)
+    sessions = 0
+    for times in by_user.values():
+        times = sorted(times)
+        sessions += 1 + sum(1 for a, b in zip(times, times[1:]) if (b - a).total_seconds() >= 300)
+    visits = sim.stats.visits_started
+    assert 0.9 * visits <= sessions <= visits
