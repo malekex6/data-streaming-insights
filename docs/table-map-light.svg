@@ -1,0 +1,105 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 780 556" width="780" height="556" role="img" aria-label="Table map: Beam writes bronze, silver staging and gold staging in parallel; the MERGE turns staging into final tables; views read the final tables; Looker Studio reads final tables and views, never staging.">
+<title>Table map: medallion layers</title>
+<style>
+svg { color:#5d6b78; }
+text { font-family:-apple-system,"Segoe UI",Helvetica,Arial,sans-serif; font-size:12px; fill:#16202a; }
+.mono { font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; font-size:10.5px; }
+.mut { fill:#5d6b78; font-size:11px; }
+.bold { font-weight:600; }
+.bad { fill:#b23a2e; font-size:11px; }
+.box { fill:#ffffff; stroke:#dce3ea; stroke-width:1; }
+.stg { stroke-dasharray:4 3; stroke:#5d6b78; }
+.view { fill:#e6eefa; stroke:#1f5fbf; }
+.arr { stroke:#5d6b78; stroke-width:1.4; fill:none; }
+.band-bronze { fill:#f7ede3; stroke:#9a5b22; stroke-opacity:.35; }
+.band-silver { fill:#eef1f4; stroke:#56636f; stroke-opacity:.35; }
+.band-gold { fill:#f8f0d3; stroke:#876700; stroke-opacity:.35; }
+.h-bronze, .h-silver, .h-gold { font-weight:700; font-size:12px; letter-spacing:.06em; }
+.h-bronze { fill:#9a5b22; } .h-silver { fill:#56636f; } .h-gold { fill:#876700; }
+</style>
+<rect width="780" height="556" fill="#ffffff"/>
+<defs><marker id="mxArrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#5d6b78"/></marker></defs>
+<rect class="box" x="20" y="10" width="170" height="44" rx="4"/>
+<text x="105" y="28" class="bold" text-anchor="middle">Simulator (tab 2)</text>
+<text x="105" y="44" class="mut" text-anchor="middle">fake sales</text>
+<rect class="box" x="305" y="10" width="170" height="44" rx="4"/>
+<text x="390" y="28" class="bold" text-anchor="middle">Pub/Sub</text>
+<text x="390" y="44" class="mono" text-anchor="middle">sales-events</text>
+<rect class="box" x="590" y="10" width="180" height="44" rx="4"/>
+<text x="680" y="28" class="bold" text-anchor="middle">Beam pipeline (tab 1)</text>
+<text x="680" y="44" class="mut" text-anchor="middle">validate · dedup · windows</text>
+<line class="arr" x1="190" y1="32" x2="303" y2="32" marker-end="url(#mxArrow)"/>
+<text x="247" y="26" class="mut" text-anchor="middle">publishes</text>
+<line class="arr" x1="475" y1="32" x2="588" y2="32" marker-end="url(#mxArrow)"/>
+<text x="531" y="26" class="mut" text-anchor="middle">reads, event time</text>
+<line class="arr" x1="680" y1="54" x2="680" y2="80"/>
+<line class="arr" x1="103" y1="80" x2="680" y2="80"/>
+<line class="arr" x1="103" y1="80" x2="103" y2="102" marker-end="url(#mxArrow)"/>
+<line class="arr" x1="322" y1="80" x2="322" y2="102" marker-end="url(#mxArrow)"/>
+<line class="arr" x1="610" y1="80" x2="610" y2="102" marker-end="url(#mxArrow)"/>
+<text x="466" y="74" class="mut" text-anchor="middle">writes in parallel: append, at-least-once</text>
+<rect class="band-bronze" x="10" y="104" width="186" height="378" rx="8"/>
+<rect class="band-silver" x="205" y="104" width="235" height="378" rx="8"/>
+<rect class="band-gold" x="450" y="104" width="320" height="378" rx="8"/>
+<text x="20" y="122" class="h-bronze">BRONZE · raw</text>
+<text x="215" y="122" class="h-silver">SILVER · clean sales</text>
+<text x="460" y="122" class="h-gold">GOLD · window KPIs</text>
+<rect class="box" x="18" y="132" width="170" height="40" rx="4"/>
+<text x="26" y="149" class="mono">transactions_bronze</text>
+<text x="26" y="164" class="mut">every message, raw</text>
+<rect class="box" x="18" y="180" width="170" height="40" rx="4"/>
+<text x="26" y="197" class="mono">transactions_dead_letter</text>
+<text x="26" y="212" class="mut">rejects + reason</text>
+<rect class="box stg" x="213" y="132" width="219" height="88" rx="4"/>
+<text x="223" y="152" class="mono">transactions_silver_staging</text>
+<text x="223" y="170" class="mut">valid sales, deduped by Beam</text>
+<text x="223" y="186" class="mut">copies possible (write retries)</text>
+<rect class="box stg" x="458" y="132" width="304" height="26" rx="4"/>
+<text x="468" y="149" class="mono">gold_sales_per_minute_staging</text>
+<rect class="box stg" x="458" y="163" width="304" height="26" rx="4"/>
+<text x="468" y="180" class="mono">gold_user_sessions_staging</text>
+<rect class="box stg" x="458" y="194" width="304" height="26" rx="4"/>
+<text x="468" y="211" class="mono">gold_region_sales_rolling_10m_staging</text>
+<line class="arr" x1="322" y1="220" x2="322" y2="296" marker-end="url(#mxArrow)"/>
+<line class="arr" x1="610" y1="220" x2="610" y2="296" marker-end="url(#mxArrow)"/>
+<rect class="box" x="374" y="232" width="184" height="56" rx="8"/>
+<text x="466" y="248" class="bold" text-anchor="middle">MERGE every 5 min (tab 3)</text>
+<text x="466" y="264" class="mut" text-anchor="middle">one row per key</text>
+<text x="466" y="280" class="mut" text-anchor="middle">newest pane wins</text>
+<text x="103" y="246" class="bold" text-anchor="middle">never merged</text>
+<text x="103" y="262" class="mut" text-anchor="middle">audit · replay</text>
+<text x="103" y="278" class="mut" text-anchor="middle">fix the sources</text>
+<rect class="box" x="213" y="298" width="219" height="88" rx="4"/>
+<text x="223" y="318" class="mono">transactions_silver</text>
+<text x="223" y="336" class="mut">1 row per transaction_id</text>
+<text x="223" y="352" class="mut">keeps even very late sales</text>
+<rect class="box" x="458" y="298" width="304" height="26" rx="4"/>
+<text x="468" y="315" class="mono">gold_sales_per_minute</text>
+<text x="752" y="315" class="mut" text-anchor="end">minute · region · product</text>
+<rect class="box" x="458" y="329" width="304" height="26" rx="4"/>
+<text x="468" y="346" class="mono">gold_user_sessions</text>
+<text x="752" y="346" class="mut" text-anchor="end">1 row per visit</text>
+<rect class="box" x="458" y="360" width="304" height="26" rx="4"/>
+<text x="468" y="377" class="mono">gold_region_sales_rolling_10m</text>
+<text x="752" y="377" class="mut" text-anchor="end">never SUM</text>
+<line class="arr" x1="322" y1="386" x2="322" y2="412" marker-end="url(#mxArrow)"/>
+<line class="arr" x1="610" y1="386" x2="610" y2="412" marker-end="url(#mxArrow)"/>
+<rect class="view" x="213" y="414" width="219" height="26" rx="13"/>
+<text x="225" y="431" class="mono">v_arrival_latency_per_minute</text>
+<rect class="view" x="213" y="445" width="219" height="26" rx="13"/>
+<text x="225" y="462" class="mono">v_daily_sales</text>
+<rect class="view" x="458" y="414" width="304" height="26" rx="13"/>
+<text x="470" y="431" class="mono">v_region_sales_drop_alert</text>
+<text x="750" y="431" class="mut" text-anchor="end">below half = alert</text>
+<line class="arr" x1="322" y1="471" x2="322" y2="500" marker-end="url(#mxArrow)"/>
+<line class="arr" x1="610" y1="440" x2="610" y2="500" marker-end="url(#mxArrow)"/>
+<rect class="box" x="205" y="502" width="565" height="44" rx="4"/>
+<text x="487" y="521" class="bold" text-anchor="middle">Looker Studio reads final tables and views</text>
+<text x="487" y="538" class="bad" text-anchor="middle">never *_staging: it holds every pane, sums would count twice</text>
+<rect class="box stg" x="18" y="503" width="24" height="11" rx="2"/>
+<text x="50" y="513" class="mut">staging: append</text>
+<rect class="box" x="18" y="520" width="24" height="11" rx="2"/>
+<text x="50" y="530" class="mut">final: MERGE</text>
+<rect class="view" x="18" y="537" width="24" height="11" rx="5"/>
+<text x="50" y="547" class="mut">view</text>
+</svg>

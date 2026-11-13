@@ -28,6 +28,14 @@ simulator / FastAPI ──> Pub/Sub ──> Beam (Dataflow) ──> BigQuery *_s
 
 ## Tables (dataset `insightstream_analytics`)
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/table-map-dark.svg">
+  <img alt="Table map: Beam writes bronze, silver staging and gold staging in parallel; the MERGE turns staging into final tables; views read the final tables; Looker Studio reads final tables and views, never staging." src="docs/table-map-light.svg" width="780">
+</picture>
+
+Dashed = staging (append, at-least-once), solid = final (idempotent MERGE), rounded = view. Gold never reads silver: both come from the same deduplicated stream inside Beam.
+
+
 | Table | Written by | Key / grain | Read it? |
 |---|---|---|---|
 | `transactions_bronze` | Beam, append | one row per Pub/Sub message, raw | audit, replay |
