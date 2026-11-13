@@ -27,7 +27,7 @@ def _schema(fields: List[tuple]) -> Dict[str, Any]:
 
 
 def _partitioned(field: str, days: int, clustering: List[str] = None) -> Dict[str, Any]:
-    params = {"timePartitioning": {"type": "DAY", "field": field, "expirationMs": str(days * DAY_MS)}}
+    params = {"timePartitioning": {"type": "DAY", "field": field, "expirationMs": days * DAY_MS}}
     if clustering:
         params["clustering"] = {"fields": clustering}
     return params
