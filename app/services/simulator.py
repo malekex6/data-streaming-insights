@@ -4,7 +4,10 @@ Three real-life behaviours are simulated, one per stream-processing concept:
 
 1. Customer visits  -> SESSION windows.
    A customer opens the app, buys 1 to 4 things, 20 s to 3 min apart, then
-   leaves. Silence of more than 5 min means the visit is over.
+   leaves. Silence of more than 5 min means the visit is over. The same
+   customer comes back at the earliest 10 min later (revisit_cooldown_s), so
+   one visit = one session window. Without it, a small customer pool makes
+   back-to-back visits glue into one session that lasts the whole run.
 
 2. Offline phones   -> LATE data, WATERMARK, ALLOWED LATENESS.
    Some customers buy while offline (metro, plane, bad signal). The app keeps
@@ -28,12 +31,14 @@ from datetime import datetime, timedelta
 from typing import Dict, List, Optional
 
 from app.models.event_model import Region, TransactionEvent
-from app.services.generator_service import USER_IDS, make_event
+from app.services.generator_service import make_event
 
 
 @dataclass
 class SimulatorConfig:
     visits_per_minute: float = 20.0
+    num_users: int = 1000             # customer pool (user-0001 ... user-1000)
+    revisit_cooldown_s: float = 600.0  # > 300 s session gap: a new visit = a new session
     min_purchases: int = 1
     max_purchases: int = 4
     min_gap_s: float = 20.0           # time between two purchases in a visit
@@ -69,7 +74,9 @@ class ShopSimulator:
     def __init__(self, config: Optional[SimulatorConfig] = None, rng: Optional[random.Random] = None):
         self.cfg = config or SimulatorConfig()
         self.rng = rng or random.Random()
+        self.users = [f"user-{i:04d}" for i in range(1, self.cfg.num_users + 1)]
         self.visits: Dict[str, _Visit] = {}
+        self.back_after: Dict[str, datetime] = {}  # user -> earliest next visit
         self.retries: List[tuple] = []  # (send_at, event)
         self.stats = SimulatorStats()
         self._visit_carry = 0.0
@@ -78,7 +85,8 @@ class ShopSimulator:
         self._visit_carry += self.cfg.visits_per_minute * seconds / 60.0
         while self._visit_carry >= 1.0:
             self._visit_carry -= 1.0
-            free_users = [u for u in USER_IDS if u not in self.visits]
+            free_users = [u for u in self.users
+                          if u not in self.visits and self.back_after.get(u, now) <= now]
             if not free_users:
                 return
             user = self.rng.choice(free_users)
@@ -124,6 +132,7 @@ class ShopSimulator:
 
             if visit.remaining == 0 and not visit.queue:
                 del self.visits[user]
+                self.back_after[user] = now + timedelta(seconds=self.cfg.revisit_cooldown_s)
 
         due = [e for (t, e) in self.retries if t <= now]
         self.retries = [(t, e) for (t, e) in self.retries if t > now]
